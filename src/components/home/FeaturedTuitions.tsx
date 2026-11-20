@@ -1,6 +1,7 @@
 import { ITuition } from '@/types/tuition';
 import Image from 'next/image';
 import Link from 'next/link';
+import TuitionCard from '../tuition/TuitionCard';
 
 interface FeaturedTuitionsProps {
     tuitions: ITuition[];
@@ -44,7 +45,7 @@ export default function FeaturedTuitions({ tuitions }: FeaturedTuitionsProps) {
                 {/* Tuition Cards */}
                 {tuitions.length > 0 ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {tuitions.slice(0, 6).map((tuition) => (
+                        {tuitions.map((tuition) => (
                             <div
                                 key={tuition._id}
                                 className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-900/5"
