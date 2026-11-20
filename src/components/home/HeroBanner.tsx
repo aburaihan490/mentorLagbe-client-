@@ -49,26 +49,21 @@ const HeroBanner = () => {
 
                         {/* CTA Buttons */}
                         <div className="mt-8 flex flex-wrap items-center gap-3">
-                            <Button
-                                size="lg"
-                                className="h-12 rounded-full bg-emerald-600 px-7 font-semibold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700"
+                            <Link
+                                href="/tuitions"
+                                className="h-12 rounded-full bg-emerald-600 px-7 font-semibold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 text-white flex items-center justify-center"
                             >
-                                <Link href="/tuitions">
-                                    Browse Tuitions
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
+                                Browse Tuitions
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
 
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="h-12 rounded-full border-slate-300 bg-white px-7 font-semibold hover:border-emerald-500 hover:text-emerald-600"
+                            <Link
+                                href="/become-a-tutor"
+                                className="flex items-center justify-center h-12 rounded-full border-slate-300 bg-white px-7 font-semibold hover:border-emerald-500 hover:text-emerald-600"
                             >
-                                <Link href="/become-a-tutor">
-                                    <GraduationCap className="mr-2 h-5 w-5" />
-                                    Become a Tutor
-                                </Link>
-                            </Button>
+                                <GraduationCap className="mr-2 h-5 w-5" />
+                                Become a Tutor
+                            </Link>
                         </div>
 
                         {/* Happy Learners */}
@@ -102,66 +97,43 @@ const HeroBanner = () => {
                     </div>
 
                     {/* Right Image */}
-                    <div className="relative mx-auto w-full max-w-[570px]">
-                        {/* Decorative icons */}
-                        <div className="absolute -left-5 top-12 z-10 rounded-2xl bg-white p-3 shadow-lg">
-                            <GraduationCap className="h-7 w-7 text-emerald-600" />
+
+                    <div className="relative mx-auto w-full max-w-[650px]">
+                        {/* Graduation Icon */}
+                        <div className="absolute -left-2 top-8 z-10 rounded-xl bg-white p-2 shadow-lg sm:-left-3 sm:top-12 sm:rounded-2xl sm:p-3 lg:-left-5">
+                            <GraduationCap className="h-5 w-5 text-emerald-600 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
                         </div>
 
-                        <div className="absolute -right-3 top-16 z-10 rounded-2xl bg-white p-3 shadow-lg">
-                            <BookOpen className="h-6 w-6 text-blue-500" />
+                        {/* Book Icon */}
+                        <div className="absolute -right-1 top-10 z-10 rounded-xl bg-white p-2 shadow-lg sm:-right-2 sm:top-16 sm:rounded-2xl sm:p-3 lg:-right-3">
+                            <BookOpen className="h-5 w-5 text-blue-500 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                         </div>
 
-                        <div className="absolute -bottom-3 left-8 z-10 rounded-2xl bg-white p-3 shadow-lg">
-                            <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                        {/* Shield Icon */}
+                        <div className="absolute bottom-2 left-5 z-10 rounded-xl bg-white p-2 shadow-lg sm:bottom-0 sm:left-8 sm:rounded-2xl sm:p-3">
+                            <ShieldCheck className="h-5 w-5 text-emerald-500 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                         </div>
 
-                        {/* Main Hero Image */}
-                        <div className="relative aspect-[5/4] overflow-hidden rounded-[32px] bg-gradient-to-br from-emerald-100 via-teal-50 to-blue-100">
+                        {/* Background Glow */}
+                        <div className="absolute inset-10 rounded-full bg-emerald-200/40 blur-3xl" />
+
+                        {/* Main Banner Image */}
+                        <div className="relative aspect-[3/2] w-full overflow-hidden rounded-2xl sm:rounded-[28px]">
                             <Image
-                                src="/images/mentor-hero.png"
-                                alt="Student learning with laptop"
+                                src="/learning.png"
+                                alt="MentorLagbe Student and Tutor Dashboard"
                                 fill
                                 priority
-                                sizes="(max-width: 1024px) 100vw, 50vw"
-                                className="object-contain object-bottom"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 650px"
+                                className="object-contain"
                             />
-
-                            {/* Floating Card */}
-                            <div className="absolute right-3 top-6 rounded-2xl border border-white/70 bg-white/90 p-4 shadow-xl backdrop-blur-md sm:right-5 sm:top-10">
-                                <div className="flex items-center gap-2">
-                                    <Sparkles className="h-5 w-5 text-emerald-500" />
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-800">
-                                            Better Learning
-                                        </p>
-                                        <p className="text-sm font-bold text-emerald-600">
-                                            Brighter Future
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Bottom Info */}
-                            <div className="absolute bottom-5 left-5 rounded-xl bg-white/90 px-4 py-3 shadow-lg backdrop-blur-md">
-                                <div className="flex items-center gap-2">
-                                    <Users className="h-5 w-5 text-emerald-600" />
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900">
-                                            Expert Mentors
-                                        </p>
-                                        <p className="text-xs text-slate-500">
-                                            Learn from the best
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Bottom Features */}
-                <div className="mt-16 grid grid-cols-2 gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:grid-cols-4 md:gap-6 md:p-7">
+
+                <div className="mt-10 grid grid-cols-1 gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:grid-cols-2 sm:gap-4 sm:p-5 lg:mt-16 lg:grid-cols-4 lg:gap-6 lg:p-7">
                     {[
                         {
                             icon: ShieldCheck,
@@ -189,17 +161,20 @@ const HeroBanner = () => {
                         return (
                             <div
                                 key={index}
-                                className="flex items-center gap-3"
+                                className="flex min-w-0 items-center gap-2 sm:gap-3"
                             >
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                                    <Icon className="h-6 w-6 text-emerald-600" />
+                                {/* Icon */}
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-10 sm:w-10 lg:h-11 lg:w-11">
+                                    <Icon className="h-5 w-5 text-emerald-600 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                                 </div>
 
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-800">
+                                {/* Content */}
+                                <div className="min-w-0">
+                                    <h3 className="text-xs font-bold text-slate-800 sm:text-sm">
                                         {feature.title}
                                     </h3>
-                                    <p className="mt-1 text-xs text-slate-500">
+
+                                    <p className="mt-1 text-[10px] text-slate-500 sm:text-xs">
                                         {feature.subtitle}
                                     </p>
                                 </div>
