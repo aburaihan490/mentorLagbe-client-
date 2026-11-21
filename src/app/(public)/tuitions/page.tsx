@@ -3,7 +3,13 @@ import TuitionFilter from '@/components/tuition/TuitionFilter';
 import TuitionList from '@/components/tuition/TuitionList';
 import { Suspense } from 'react';
 
-export default function TuitionsPage() {
+interface Props {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function TuitionsPage({ searchParams }: Props) {
+    const params = await searchParams;
+
     return (
         <section className="min-h-screen bg-[#f5f8ff] py-12 md:py-16">
             {/* header */}
@@ -29,7 +35,7 @@ export default function TuitionsPage() {
                 {/* Search Filter  */}
                 <TuitionFilter />
                 <Suspense fallback={<FeaturedTuitionsSkeleton />}>
-                    <TuitionList />
+                    <TuitionList searchParams={params} />
                 </Suspense>
             </div>
         </section>
