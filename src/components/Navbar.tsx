@@ -7,10 +7,8 @@ import Image from 'next/image';
 const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Browse Tuitions', href: '/tuitions' },
-    { name: 'Become a Tutor', href: '/become-tutor' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
 ];
 
 export default function Navbar() {

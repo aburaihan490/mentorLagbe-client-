@@ -1,6 +1,6 @@
-import getTuitions from '@/qurey/tuitions.api';
 import TuitionCard from './TuitionCard';
 import Pagination from './Pagination';
+import { getTuitions } from '@/qurey/tuitions.api';
 
 interface Props {
     searchParams: {

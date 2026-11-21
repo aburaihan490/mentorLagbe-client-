@@ -1,7 +1,13 @@
-import React from 'react';
+import PricingSection from '@/components/pricing/PricingSection';
+import PricingComparison from '@/components/pricing/PricingComparison';
+import PricingFAQ from '@/components/pricing/PricingFAQ';
 
-const page = () => {
-    return <div>page</div>;
-};
-
-export default page;
+export default function PricingPage() {
+    return (
+        <main>
+            <PricingSection />
+            <PricingComparison />
+            <PricingFAQ />
+        </main>
+    );
+}

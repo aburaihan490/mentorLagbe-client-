@@ -11,7 +11,9 @@ interface TuitionQuery {
     page?: number;
 }
 
-const getTuitions = async (query: TuitionQuery): Promise<ITuitionResponse> => {
+export const getTuitions = async (
+    query: TuitionQuery = {},
+): Promise<ITuitionResponse> => {
     try {
         const params = new URLSearchParams();
 
@@ -35,4 +37,25 @@ const getTuitions = async (query: TuitionQuery): Promise<ITuitionResponse> => {
     }
 };
 
-export default getTuitions;
+export const getSingleTuition = async (id: string) => {
+    try {
+        const res = await fetch(`${URL}/tuition/single-tuition/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            throw new Error('Failed to fetch tuition details');
+        }
+
+        const result = await res.json();
+
+        return result;
+    } catch (error) {
+        console.error('Get Single Tuition Error:', error);
+        throw error;
+    }
+};
