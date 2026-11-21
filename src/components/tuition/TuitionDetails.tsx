@@ -1,21 +1,29 @@
 'use client';
 
-import { useState } from 'react';
 import { ITuition } from '@/types/tuition';
 import ApplyTuitionModal from './ApplyTuitionModal';
+import ApplyAction from './ApplyAction';
 
 interface TuitionDetailsProps {
     tuition: ITuition;
     userRole?: 'Student' | 'Tutor' | 'Admin' | null;
 }
 
+function InfoItem({ label, value }: { label: string; value: string }) {
+    return (
+        <div>
+            <p className="text-sm text-gray-500">{label}</p>
+            <p className="mt-1 font-semibold text-gray-800">{value}</p>
+        </div>
+    );
+}
+
 export default function TuitionDetails({
     tuition,
     userRole,
 }: TuitionDetailsProps) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
     const canApply = userRole === 'Student';
+    console.log(canApply);
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
@@ -180,47 +188,14 @@ export default function TuitionDetails({
                             </div>
 
                             {/* Apply Button */}
-                            <div className="mt-8">
-                                {canApply ? (
-                                    <button
-                                        onClick={() => setIsModalOpen(true)}
-                                        disabled={
-                                            !tuition.isActive ||
-                                            tuition.approvalStatus !==
-                                                'approved'
-                                        }
-                                        className="w-full rounded-xl bg-blue-600 px-6 py-4 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                                    >
-                                        Apply for Tuition
-                                    </button>
-                                ) : (
-                                    <div className="rounded-xl bg-yellow-50 p-4 text-center text-sm font-medium text-yellow-700">
-                                        Only students can apply for this
-                                        tuition.
-                                    </div>
-                                )}
-                            </div>
+                            <ApplyAction
+                                canApply={canApply}
+                                tuition={tuition}
+                            />
                         </div>
                     </div>
                 </div>
             </div>
-
-            {/* Application Modal */}
-            <ApplyTuitionModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                tuitionId={tuition._id}
-                tuitionTitle={tuition.title}
-            />
-        </div>
-    );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-    return (
-        <div>
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="mt-1 font-semibold text-gray-800">{value}</p>
         </div>
     );
 }

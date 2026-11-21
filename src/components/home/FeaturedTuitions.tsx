@@ -1,13 +1,11 @@
+import { getTuitions } from '@/qurey/tuitions.api';
 import { ITuition } from '@/types/tuition';
 import Image from 'next/image';
 import Link from 'next/link';
-import TuitionCard from '../tuition/TuitionCard';
 
-interface FeaturedTuitionsProps {
-    tuitions: ITuition[];
-}
-
-export default function FeaturedTuitions({ tuitions }: FeaturedTuitionsProps) {
+export default async function FeaturedTuitions() {
+    const data = await getTuitions();
+    const tuitions: ITuition[] = data?.data;
     return (
         <section className="relative overflow-hidden bg-[#f5f8ff] py-16 md:py-20">
             {/* Background Decorations */}

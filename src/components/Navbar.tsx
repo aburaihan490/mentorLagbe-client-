@@ -68,14 +68,14 @@ export default function Navbar() {
                     </button>
 
                     <Link
-                        href="/login"
+                        href="/sign-in"
                         className="rounded-full border border-gray-200 px-5 py-2 text-sm font-semibold text-[#071D40] transition hover:border-[#00A86B] hover:text-[#00A86B]"
                     >
                         Sign In
                     </Link>
 
                     <Link
-                        href="/register"
+                        href="/sign-up"
                         className="rounded-full bg-[#00A86B] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#008F5B]"
                     >
                         Get Started
@@ -133,7 +133,7 @@ export default function Navbar() {
 
                     <div className="mt-4 flex gap-3">
                         <Link
-                            href="/login"
+                            href="/sign-in"
                             onClick={() => setIsOpen(false)}
                             className="flex-1 rounded-full border border-gray-200 py-3 text-center text-sm font-semibold text-[#071D40]"
                         >
@@ -141,7 +141,7 @@ export default function Navbar() {
                         </Link>
 
                         <Link
-                            href="/register"
+                            href="/sign-up"
                             onClick={() => setIsOpen(false)}
                             className="flex-1 rounded-full bg-[#00A86B] py-3 text-center text-sm font-bold text-white"
                         >
