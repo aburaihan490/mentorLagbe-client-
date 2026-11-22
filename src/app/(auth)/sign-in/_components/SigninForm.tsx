@@ -2,23 +2,45 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { authClient } from '@/lib/auth-client';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const SigninForm = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
         setLoading(true);
 
-        // এখানে আপনার লগইন API কল বা অথেনটিকেশন লজিক বসাবেন
-        console.log('Login Data:', { email, password });
+        const formData = new FormData(e.currentTarget);
 
-        setTimeout(() => {
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+
+        try {
+            const { data, error } = await authClient.signIn.email({
+                email,
+                password,
+            });
+
+            if (error) {
+                toast.error(error.message || 'Login failed!');
+                return;
+            }
+
+            toast.success('Login successful!');
+
+            router.push('/');
+        } catch (error) {
+            console.log(error);
+            toast.error('Something went wrong. Please try again.');
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -32,13 +54,12 @@ const SigninForm = () => {
                     >
                         Email Address
                     </label>
+
                     <input
                         id="email"
                         name="email"
                         type="email"
                         required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="example@mail.com"
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
                     />
@@ -53,6 +74,7 @@ const SigninForm = () => {
                         >
                             Password
                         </label>
+
                         <Link
                             href="/forgot-password"
                             className="text-xs text-green-600 hover:underline"
@@ -60,17 +82,17 @@ const SigninForm = () => {
                             Forgot password?
                         </Link>
                     </div>
+
                     <div className="relative">
                         <input
                             id="password"
                             name="password"
                             type={showPassword ? 'text' : 'password'}
                             required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
                         />
+
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}

@@ -1,89 +1,213 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
+import { authClient } from '@/lib/auth-client';
+import Image from 'next/image';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 type Role = 'Student' | 'Tutor';
 
-interface FormErrors {
-    fullName?: string;
-    email?: string;
-    password?: string;
-    role?: string;
-}
-
 const SignupForm = () => {
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const router = useRouter();
+    const imageRef = useRef<HTMLInputElement>(null);
     const [role, setRole] = useState<Role>('Student');
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [imageName, setImageName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
 
-    // Form Validation Logic
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {};
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
 
-        // Full Name Validation
-        if (!fullName.trim()) {
-            newErrors.fullName = 'Full Name is required';
-        } else if (fullName.trim().length < 3) {
-            newErrors.fullName = 'Full Name must be at least 3 characters';
+        if (!file) return;
+
+        if (file) {
+            if (previewImage) {
+                URL.revokeObjectURL(previewImage);
+            }
+
+            setPreviewImage(URL.createObjectURL(file));
+            setImageName(file.name);
         }
-
-        // Email Validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!emailRegex.test(email)) {
-            newErrors.email = 'Please enter a valid email address';
-        }
-
-        // Password Validation (Min 6 characters)
-        if (!password) {
-            newErrors.password = 'Password is required';
-        } else if (password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters long';
-        }
-
-        // Role Validation
-        if (!role) {
-            newErrors.role = 'Please select a role';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            return;
+    const handleRemoveImage = () => {
+        if (previewImage) {
+            URL.revokeObjectURL(previewImage);
         }
 
+        setPreviewImage(null);
+        setImageName('');
+
+        if (imageRef.current) {
+            imageRef.current.value = '';
+        }
+    };
+
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+        e.preventDefault();
         setLoading(true);
 
-        // Default subscription plan set to 'free'
-        const payload = {
-            fullName: fullName.trim(),
-            email: email.trim().toLowerCase(),
-            password,
-            role,
-            subscriptionPlan: 'free',
-        };
+        try {
+            // Form Data
+            const formData = new FormData(e.currentTarget);
+            const rawData = Object.fromEntries(formData.entries());
 
-        // এখানে আপনার Sign Up API কল করবেন
-        console.log('Signup Payload:', payload);
+            // Image Validation
+            const imageFile = formData.get('image') as File;
 
-        setTimeout(() => {
+            if (
+                !imageFile ||
+                imageFile.size === 0 ||
+                imageFile.size > 2 * 1024 * 1024
+            ) {
+                throw new Error('Please select an image under 2MB');
+            }
+
+            // Image Upload
+            const uploadData = new FormData();
+            uploadData.append('image', imageFile);
+
+            const imageBB = `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMAGEDB_URL}`;
+
+            const res = await fetch(imageBB, {
+                method: 'POST',
+                body: uploadData,
+            });
+
+            const result = await res.json();
+
+            if (!res.ok || !result.success) {
+                throw new Error(result.error?.message || 'Image upload failed');
+            }
+
+            const imageUrl = result.data.url;
+
+            // Payload
+            const payload = {
+                fullName: String(rawData.fullName || '').trim(),
+                email: String(rawData.email || '')
+                    .trim()
+                    .toLowerCase(),
+                password: String(rawData.password || ''),
+                role: rawData.role as Role,
+            };
+
+            // Better Auth User Create
+            const { data, error } = await authClient.signUp.email({
+                name: payload.fullName,
+                email: payload.email,
+                password: payload.password,
+                image: imageUrl,
+                role: payload.role,
+            });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            // Success Toast
+            toast.success('Account created successfully!');
+            router.push('/sign-in');
+            router.refresh();
+        } catch (error) {
+            console.log('sign-up', error);
+            //error instanceof Error → চেক করছে error টি JavaScript-এর Error object কিনা।
+            // error.message → Error-এর আসল message দেখাচ্ছে।
+            // Something went wrong! → Error object না হলে fallback message দেখাচ্ছে।
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : 'Something went wrong!',
+            );
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (
-        <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            {/* Profile Image Input */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Profile Picture
+                </label>
+
+                <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-3">
+                    {/* Image Preview */}
+                    <div className="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-gray-100 border">
+                        {previewImage ? (
+                            <Image
+                                width={50}
+                                height={50}
+                                src={previewImage}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <span className="text-xl">👤</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Change Image Button */}
+                    <label
+                        htmlFor="image"
+                        className="shrink-0 cursor-pointer flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                        <span>↑</span>
+                        Change Image
+                    </label>
+
+                    {/* File Name */}
+                    <span className="text-sm text-gray-500 truncate flex-1 min-w-0">
+                        {imageName || 'No image selected'}
+                    </span>
+
+                    {/* Remove Image */}
+                    {previewImage && (
+                        <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="shrink-0 p-2 text-gray-400 hover:text-red-500 transition"
+                            title="Remove image"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4h8v2" />
+                                <path d="M19 6l-1 14H6L5 6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                            </svg>
+                        </button>
+                    )}
+
+                    {/* Hidden File Input */}
+                    <input
+                        ref={imageRef}
+                        id="image"
+                        name="image"
+                        type="file"
+                        accept="image/*"
+                        required
+                        onChange={handleImageChange}
+                        className="hidden"
+                    />
+                </div>
+            </div>
             {/* Full Name Input */}
             <div>
                 <label
@@ -96,24 +220,10 @@ const SignupForm = () => {
                     id="fullName"
                     name="fullName"
                     type="text"
-                    value={fullName}
-                    onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (errors.fullName)
-                            setErrors({ ...errors, fullName: undefined });
-                    }}
+                    required
                     placeholder="John Doe"
-                    className={`w-full px-4 py-2.5 border rounded-lg outline-none transition ${
-                        errors.fullName
-                            ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                            : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                    }`}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
-                {errors.fullName && (
-                    <p className="mt-1 text-xs text-red-600">
-                        {errors.fullName}
-                    </p>
-                )}
             </div>
 
             {/* Email Input */}
@@ -128,22 +238,10 @@ const SignupForm = () => {
                     id="email"
                     name="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (errors.email)
-                            setErrors({ ...errors, email: undefined });
-                    }}
+                    required
                     placeholder="example@mail.com"
-                    className={`w-full px-4 py-2.5 border rounded-lg outline-none transition ${
-                        errors.email
-                            ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                            : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                    }`}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
-                {errors.email && (
-                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
-                )}
             </div>
 
             {/* Password Input */}
@@ -159,18 +257,10 @@ const SignupForm = () => {
                         id="password"
                         name="password"
                         type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            if (errors.password)
-                                setErrors({ ...errors, password: undefined });
-                        }}
+                        required
+                        minLength={6}
                         placeholder="Minimum 6 characters"
-                        className={`w-full px-4 py-2.5 border rounded-lg outline-none transition ${
-                            errors.password
-                                ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                                : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                        }`}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     />
                     <button
                         type="button"
@@ -180,11 +270,6 @@ const SignupForm = () => {
                         {showPassword ? 'Hide' : 'Show'}
                     </button>
                 </div>
-                {errors.password && (
-                    <p className="mt-1 text-xs text-red-600">
-                        {errors.password}
-                    </p>
-                )}
             </div>
 
             {/* Role Selection Input ('Student' or 'Tutor') */}
@@ -192,16 +277,15 @@ const SignupForm = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Your Role
                 </label>
+                {/* FormData-তে role পাঠানোর জন্য hidden input */}
+                <input type="hidden" name="role" value={role} />
+
                 <div className="grid grid-cols-2 gap-3">
                     {(['Student', 'Tutor'] as Role[]).map((item) => (
                         <button
                             key={item}
                             type="button"
-                            onClick={() => {
-                                setRole(item);
-                                if (errors.role)
-                                    setErrors({ ...errors, role: undefined });
-                            }}
+                            onClick={() => setRole(item)}
                             className={`py-2.5 px-4 rounded-lg border text-sm font-medium transition flex items-center justify-center gap-2 ${
                                 role === item
                                     ? 'bg-green-50 border-green-600 text-green-700 ring-1 ring-green-600'
@@ -213,9 +297,6 @@ const SignupForm = () => {
                         </button>
                     ))}
                 </div>
-                {errors.role && (
-                    <p className="mt-1 text-xs text-red-600">{errors.role}</p>
-                )}
             </div>
 
             {/* Submit Button */}

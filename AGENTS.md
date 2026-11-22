@@ -8,34 +8,40 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## This file is partially managed
+
+- The block above is rewritten by `next dev` (see `node_modules/next/dist/server/lib/generate-agent-files.js`). With `experimental.agentFeedback: true` in `next.config.ts`, `next dev` also appends a `<!-- BEGIN:nextjs-agent-feedback -->` block here — commit both instead of deleting them.
+
 ## Repo layout
 
-- This repo is only the **client** (git root = this directory, branch `main`). `../server` is a *separate git repo*: Express 5 + MongoDB + Stripe API. No workspace tooling ties them together — nothing to install or build across both.
-- Next.js 16.4.6 App Router + Turbopack, React 19, strict TS. Path alias `@/*` → `./src/*`.
+- Client-only Next.js 16.4.6 App Router + Turbopack, React 19, strict TS. Alias `@/*` → `src/*`. `README.md` is untouched create-next-app boilerplate.
+- `../server` is a separate git repo (Express 5, MongoDB, Stripe) serving `/api/v1` on port 4000; no workspace tooling links the repos.
+- Auth is the exception to "client-only": Next talks to MongoDB directly through Better Auth (`src/lib/auth.ts`, db `mentorlagbe`). The Express `/auth` router is a stub, not the auth backend.
 
 ## Commands
 
-- `npm run dev` (dev server), `npm run build` (runs TS typecheck and fails on errors), `npm run lint` (flat-config ESLint). Single file: `npx eslint src/path/file.tsx`.
-- Typecheck: `npx tsc --noEmit` — there is no npm script for it.
-- **No test suite, no Prettier/editorconfig, no CI.** Verify with: `npm run lint` → `npx tsc --noEmit` → `npm run build`.
+- `npm run dev`; `npm run lint` (whole repo; single file: `npx eslint src/path/file.tsx`); `npx tsc --noEmit` (no npm script).
+- `npm run build` runs TS and **prerenders `/` by calling the Express API** — start `../server` on port 4000 first, or it fails with `prerender-error` on `/`.
+- No test suite, Prettier, editorconfig, or CI. Verify with `npm run lint` → `npx tsc --noEmit` → `npm run build`.
 
-## Full-stack environment
+## Environment
 
-- `.env` (gitignored) holds one var: `BACKEND_BASE_URL=http://localhost:4000/api/v1`.
-- Pages that fetch data fail unless `../server` is running: `npm run dev` there (nodemon), needs its own `.env` (`PORT`, `MONGODB_URL`, `CLIENT_URL`) and must listen on port 4000.
+- `.env` (gitignored) needs `BACKEND_BASE_URL` (e.g. `http://localhost:4000/api/v1`), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `MONGODB_URL`, and `NEXT_PUBLIC_IMAGEDB_URL` (ImgBB key; note the `IMAGEDB` spelling).
+- `../server` needs its own `.env` (`PORT`, `MONGODB_URL`, `CLIENT_URL`) and must listen on 4000; data pages fail without it.
 
 ## Data flow
 
-- Server components fetch via `src/qurey/` — **misspelled on purpose, that's the real directory name**; don't "fix" it. Files start with `import 'server-only'` and call `${BACKEND_BASE_URL}/...` endpoints (`/tuition/...`, `/auth/...`).
-- There are no Next route handlers yet (`src/app/api` doesn't exist). Client components that POST (e.g. `ApplyTuitionModal` → `/api/applications`) target endpoints that aren't implemented.
-- Tuition filtering convention: `TuitionFilter` is `'use client'` and rewrites URL searchParams with `router.push` (deleting `page` on filter change); the page passes awaited `searchParams` to the server component `TuitionList`, which fetches and renders `Pagination`.
+- Server components fetch via `src/qurey/` — misspelled on purpose, don't rename. Files are `server-only` and call `${BACKEND_BASE_URL}/tuition/...`.
+- `getTuitions` response includes `{ data, pagination }`. Filters/pagination live in URL searchParams: `TuitionFilter` (client) resets `page` on change; `TuitionList` (async server component) refetches and renders `Pagination`.
+- Auth: Better Auth is mounted at `src/app/api/auth/[...all]/route.ts`; client code uses `authClient` (`src/lib/auth-client.ts`); never add a runtime import of `src/lib/auth.ts` to a client component (module-scope `MongoClient`). Sign-up uploads a required <2MB image to ImgBB, then calls `signUp.email` with `role` (`Student`/`Tutor`). Sign-in and Navbar are wired to `authClient` (`signIn.email`, `useSession`, `signOut`; toasts via `react-hot-toast`, `Toaster` in the root layout), but the tuition `[id]` page still passes `userRole={'Student'}` hardcoded to `TuitionDetails` — apply-gating ignores the real session.
+- `ApplyTuitionModal` POSTs to `/api/applications`, which exists in neither repo — expect a 404.
 
 ## Next 16 gotchas
 
-- `params` / `searchParams` are **Promises** — await them. Prefer generated `PageProps<'/route'>` / `LayoutProps<'/route'>` over hand-rolled prop types (see `src/app/layout.tsx`).
-- Generated types in `.next/types` and `.next/dev/types` are in the tsconfig include. If `tsc` or `build` errors point into `.next/types/validator.ts` (e.g. "File … is not a module"), the real cause is a route file that isn't a module — an empty `page.tsx` — not the generated file.
+- `params` / `searchParams` are **Promises** — await them. Prefer generated `PageProps<'/route'>` / `LayoutProps<'/route'>` (see `src/app/layout.tsx`).
+- `.next/types` and `.next/dev/types` are in the tsconfig include. Errors pointing into `.next/types/validator.ts` ("File … is not a module") usually mean a route file isn't a module (e.g. an empty `page.tsx`), not a generated-type problem.
 
 ## Styling / UI
 
-- Tailwind CSS **v4, CSS-first**: there is no `tailwind.config` or `postcss.config`; `next.config.ts` maps `*.css` to the `@tailwindcss/turbopack` loader and the theme lives in `src/app/globals.css`.
-- shadcn style is `base-nova` → components use **Base UI** (`@base-ui/react`), *not* Radix. Add components with `npx shadcn add <component>`; primitives live in `src/components/ui`. `cn` comes from the `cn` npm package (re-exported by `src/lib/utils.ts`), not clsx/tailwind-merge.
+- Tailwind v4, CSS-first: no `tailwind.config` or `postcss.config`; theme lives in `src/app/globals.css`, and `next.config.ts` routes `*.css` through `@tailwindcss/turbopack`.
+- shadcn style is `base-nova` → **Base UI** (`@base-ui/react`), not Radix. Add with `npx shadcn add <component>`; primitives in `src/components/ui`. `cn` comes from the `cn` npm package (re-exported by `src/lib/utils.ts`), not clsx/tailwind-merge.

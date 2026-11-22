@@ -8,5 +8,23 @@ export const auth = betterAuth({
     database: mongodbAdapter(db),
     emailAndPassword: {
         enabled: true,
+        autoSignIn: false,
+    },
+    user: {
+        additionalFields: {
+            role: {
+                type: ['Student', 'Tutor'],
+                required: true,
+                defaultValue: 'Student',
+                input: true,
+            },
+
+            subscriptionPlan: {
+                type: 'string',
+                required: false,
+                defaultValue: 'free',
+                input: false,
+            },
+        },
     },
 });

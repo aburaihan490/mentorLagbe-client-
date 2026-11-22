@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Shantell_Sans } from 'next/font/google';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { Toaster } from 'react-hot-toast';
 
 const jakartaSans = Plus_Jakarta_Sans({
     variable: '--font-sans',
@@ -29,9 +28,41 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
             className={`${jakartaSans.variable} ${shantellSans.variable} h-full antialiased`}
         >
             <body className="min-h-full flex flex-col">
-                <Navbar />
                 {children}
-                <Footer />
+                <Toaster
+                    position="top-right"
+                    reverseOrder={false}
+                    toastOptions={{
+                        duration: 3000,
+                        style: {
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            padding: '12px 16px',
+                        },
+                        success: {
+                            style: {
+                                background: '#DCFCE7',
+                                color: '#166534',
+                                border: '1px solid #86EFAC',
+                            },
+                            iconTheme: {
+                                primary: '#16A34A',
+                                secondary: '#FFFFFF',
+                            },
+                        },
+                        error: {
+                            style: {
+                                background: '#FEE2E2',
+                                color: '#991B1B',
+                                border: '1px solid #FCA5A5',
+                            },
+                            iconTheme: {
+                                primary: '#DC2626',
+                                secondary: '#FFFFFF',
+                            },
+                        },
+                    }}
+                />
             </body>
         </html>
     );
