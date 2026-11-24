@@ -1,7 +1,7 @@
-import React from 'react';
+import AdminUsersManager from '@/components/dashboard/AdminUsersManager';
 
 const Users = () => {
-    return <div>Users Page</div>;
+    return <AdminUsersManager />;
 };
 
 export default Users;

@@ -63,7 +63,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           }
         | undefined;
 
-    const activeRole: UserRole = user?.role ?? 'student';
+    // Better Auth stores roles as "Student"/"Tutor"; normalize for the config.
+    const normalizedRole = (user?.role ?? '').toLowerCase() as UserRole;
+    const activeRole: UserRole = roleConfig[normalizedRole]
+        ? normalizedRole
+        : 'student';
     const currentRoleInfo = roleConfig[activeRole] ?? roleConfig.student;
     const displayName = user?.name || 'User';
 
@@ -83,7 +87,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         await authClient.signOut({
             fetchOptions: {
                 onSuccess: () => {
-                    router.push('/login');
+                    router.push('/sign-in');
                     router.refresh();
                 },
             },

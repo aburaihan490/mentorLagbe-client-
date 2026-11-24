@@ -1,7 +1,9 @@
-import React from 'react';
+import PostTuitionManager from '@/components/dashboard/PostTuitionManager';
 
 const PostTuition = () => {
-    return <div>Post Tuition Page</div>;
+    const URL: string | undefined = process.env.BACKEND_BASE_URL;
+    console.log(URL);
+    return <PostTuitionManager url={URL} />;
 };
 
 export default PostTuition;

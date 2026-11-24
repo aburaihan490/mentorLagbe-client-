@@ -7,12 +7,12 @@ import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
-type Role = 'Student' | 'Tutor';
+type Role = 'student' | 'tutor';
 
 const SignupForm = () => {
     const router = useRouter();
     const imageRef = useRef<HTMLInputElement>(null);
-    const [role, setRole] = useState<Role>('Student');
+    const [role, setRole] = useState<Role>('student');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [imageName, setImageName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -281,7 +281,7 @@ const SignupForm = () => {
                 <input type="hidden" name="role" value={role} />
 
                 <div className="grid grid-cols-2 gap-3">
-                    {(['Student', 'Tutor'] as Role[]).map((item) => (
+                    {(['student', 'tutor'] as Role[]).map((item) => (
                         <button
                             key={item}
                             type="button"
@@ -292,7 +292,7 @@ const SignupForm = () => {
                                     : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                             }`}
                         >
-                            <span>{item === 'Student' ? '🎓' : '👨‍🏫'}</span>
+                            <span>{item === 'student' ? '🎓' : '👨‍🏫'}</span>
                             <span>{item}</span>
                         </button>
                     ))}

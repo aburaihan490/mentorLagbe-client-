@@ -1,8 +1,9 @@
-'use client'; // Remove if using plain React / Vite
+'use client';
 
-import Link from 'next/link'; // Or use `<a>` / react-router `<Link>` if not using Next.js
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import Image from 'next/image';
 import {
     Sidebar,
     SidebarContent,
@@ -14,27 +15,38 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-// adjust path to your navItemsByRole
-import { UserRole } from '@/types/user'; // adjust path to your types
-import { authClient } from '@/lib/auth-client'; // adjust path to your Better Auth client
+import { UserRole } from '@/types/user';
+import { authClient } from '@/lib/auth-client';
 import { navItemsByRole } from '@/lib/dashboard-menu';
 
 interface DashboardSidebarProps {
-    /** Optional fallback/override role if not coming directly from Better Auth session */
     role?: UserRole;
 }
+
+const getRoleFromPathname = (pathname: string | null): UserRole | undefined => {
+    if (!pathname) return undefined;
+    if (pathname.startsWith('/tutor')) return 'tutor';
+    if (pathname.startsWith('/admin')) return 'admin';
+    if (pathname.startsWith('/student')) return 'student';
+    return undefined;
+};
 
 const DashboardSidebar = ({ role }: DashboardSidebarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
-    // Better Auth session hook
     const { data: session, isPending } = authClient.useSession();
 
-    // Determine role (adjust `session?.user?.role` if you map custom fields differently in Better Auth)
-    const sessionRole = (session?.user as { role?: UserRole } | undefined)
-        ?.role;
-    const activeRole: UserRole = role ?? sessionRole ?? 'student';
+    // Case-insensitive & safe role extraction (supports 'tutor', 'TUTOR', etc.)
+    const rawSessionRole = (
+        session?.user as { role?: string } | undefined
+    )?.role?.toLowerCase() as UserRole | undefined;
+
+    const pathRole = getRoleFromPathname(pathname);
+
+    // Priority: explicit prop -> session role -> URL path role -> default 'student'
+    const activeRole: UserRole =
+        role ?? rawSessionRole ?? pathRole ?? 'student';
 
     const items = navItemsByRole[activeRole] ?? navItemsByRole.student;
 
@@ -42,7 +54,7 @@ const DashboardSidebar = ({ role }: DashboardSidebarProps) => {
         await authClient.signOut({
             fetchOptions: {
                 onSuccess: () => {
-                    router.push('/login'); // or '/'
+                    router.push('/sign-in');
                     router.refresh();
                 },
             },
@@ -54,7 +66,7 @@ const DashboardSidebar = ({ role }: DashboardSidebarProps) => {
             {/* Brand Header */}
             <SidebarHeader className="px-5 py-4">
                 <Link href="/" className="flex items-center gap-2">
-                    {/* Replace with your MentorLagbe logo/icon */}
+                    <Image width={50} height={50} src="/logo.png" alt="logo" />
                     <span className="text-xl font-bold tracking-tight text-slate-800">
                         Mentor<span className="text-emerald-600">Lagbe</span>
                     </span>
@@ -68,11 +80,10 @@ const DashboardSidebar = ({ role }: DashboardSidebarProps) => {
                         <SidebarMenu className="space-y-1">
                             {items.map((item) => {
                                 const Icon = item.icon;
-                                // Exact match for root role dashboards, startsWith for subpages
                                 const isRootRoute =
-                                    item.href === '/dashboard' ||
-                                    item.href === '/tutor' ||
-                                    item.href === '/admin';
+                                    item.href === '/student/dashboard' ||
+                                    item.href === '/tutor/dashboard' ||
+                                    item.href === '/admin/dashboard';
 
                                 const isActive = isRootRoute
                                     ? pathname === item.href
@@ -107,12 +118,13 @@ const DashboardSidebar = ({ role }: DashboardSidebarProps) => {
                                 );
                             })}
 
-                            {/* Logout button matching the screenshot placement */}
+                            {/* Logout button */}
                             <SidebarMenuItem className="pt-1">
                                 <SidebarMenuButton
+                                    type="button"
                                     onClick={handleLogout}
                                     disabled={isPending}
-                                    className="h-11 rounded-xl px-4 font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+                                    className="h-11 cursor-pointer rounded-xl px-4 font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                                 >
                                     <LogOut className="h-4 w-4 shrink-0 text-slate-700" />
                                     <span>Logout</span>

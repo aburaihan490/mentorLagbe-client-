@@ -1,7 +1,7 @@
-import React from 'react';
+import AdminTuitionsManager from '@/components/dashboard/AdminTuitionsManager';
 
 const Tuitions = () => {
-    return <div>Tuitions Page</div>;
+    return <AdminTuitionsManager />;
 };
 
 export default Tuitions;

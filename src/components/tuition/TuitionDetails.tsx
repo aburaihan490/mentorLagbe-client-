@@ -1,12 +1,13 @@
 'use client';
 
 import { ITuition } from '@/types/tuition';
-import ApplyTuitionModal from './ApplyTuitionModal';
 import ApplyAction from './ApplyAction';
+import Image from 'next/image';
 
 interface TuitionDetailsProps {
     tuition: ITuition;
-    userRole?: 'Student' | 'Tutor' | 'Admin' | null;
+    userRole?: 'student' | 'tutor' | 'admin' | null;
+    server_url: string | undefined;
 }
 
 function InfoItem({ label, value }: { label: string; value: string }) {
@@ -20,20 +21,20 @@ function InfoItem({ label, value }: { label: string; value: string }) {
 
 export default function TuitionDetails({
     tuition,
-    userRole,
+    server_url,
 }: TuitionDetailsProps) {
-    const canApply = userRole === 'Student';
-    console.log(canApply);
-
     return (
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="mx-auto max-w-6xl px-4">
                 {/* Banner */}
                 <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
                     <div className="relative h-72 md:h-96">
-                        <img
+                        <Image
+                            width={500}
+                            height={500}
                             src={tuition.bannerImage}
                             alt={tuition.title}
+                            loading="eager"
                             className="h-full w-full object-cover"
                         />
 
@@ -189,8 +190,8 @@ export default function TuitionDetails({
 
                             {/* Apply Button */}
                             <ApplyAction
-                                canApply={canApply}
                                 tuition={tuition}
+                                server_url={server_url}
                             />
                         </div>
                     </div>

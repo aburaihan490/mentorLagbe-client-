@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export default function Footer() {
     return (
-        <footer className="relative overflow-hidden bg-slate-950 text-white z-20">
+        <footer className="relative overflow-hidden bg-slate-950 text-white">
             {/* Background Decoration */}
             <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-emerald-600/10 blur-3xl" />
             <div className="absolute -bottom-20 left-0 h-72 w-72 rounded-full bg-blue-600/10 blur-3xl" />

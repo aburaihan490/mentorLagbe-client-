@@ -1,7 +1,7 @@
-import React from 'react';
+import ApplicantsManager from '@/components/dashboard/ApplicantsManager';
 
-const Applicants = () => {
-    return <div>Applicants Page</div>;
+const ApplicantsPage = () => {
+    return <ApplicantsManager />;
 };
 
-export default Applicants;
+export default ApplicantsPage;

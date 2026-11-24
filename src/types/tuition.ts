@@ -13,6 +13,8 @@ export interface ITuition {
     tutorEmail: string;
     approvalStatus: 'approved' | 'pending' | 'rejected';
     isActive: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 }
 export interface IPagination {
     currentPage: number;

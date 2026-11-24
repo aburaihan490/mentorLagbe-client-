@@ -8,12 +8,14 @@ const TuitionsDetailsPage = async ({
     params: Promise<{ id: string }>;
 }) => {
     const { id } = await params;
-    console.log(id);
     const tuition = await getSingleTuition(id as string);
     const res: ITuition = tuition.data;
+
+    const server_url: string | undefined = process.env.BACKEND_BASE_URL;
+
     return (
         <div>
-            <TuitionDetails tuition={res} userRole={'Student'} />
+            <TuitionDetails tuition={res} server_url={server_url} />
         </div>
     );
 };

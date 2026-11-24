@@ -25,7 +25,7 @@ export default function Navbar() {
     const user = session?.user;
 
     // Role
-    const role = user?.role || 'User';
+    const role = user?.role || 'student';
 
     // Sign Out
     const handleSignOut = async () => {
@@ -158,7 +158,7 @@ export default function Navbar() {
                                         </div>
 
                                         <Link
-                                            href={`${role.toLocaleLowerCase()}/dashboard`}
+                                            href={`/${role.toLocaleLowerCase()}/dashboard`}
                                             onClick={() =>
                                                 setProfileOpen(false)
                                             }
@@ -256,7 +256,7 @@ export default function Navbar() {
                                         </div>
 
                                         <Link
-                                            href={`${role.toLocaleLowerCase()}/dashboard`}
+                                            href={`/${role.toLocaleLowerCase()}/dashboard`}
                                             onClick={() =>
                                                 setProfileOpen(false)
                                             }

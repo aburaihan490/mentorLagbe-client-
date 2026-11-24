@@ -1,7 +1,7 @@
-import React from 'react';
+import AdminTransactionsTable from '@/components/dashboard/AdminTransactionsTable';
 
 const Transactions = () => {
-    return <div>Transactions Page</div>;
+    return <AdminTransactionsTable />;
 };
 
 export default Transactions;

@@ -6,8 +6,8 @@ import {
     UserCog,
     Users,
     BookOpen,
-    BarChart3,
     Settings,
+    BookBookmark,
 } from 'lucide-react';
 
 export const navItemsByRole = {
@@ -17,11 +17,6 @@ export const navItemsByRole = {
             name: 'My Applications',
             href: '/student/my-applications',
             icon: FileText,
-        },
-        {
-            name: 'My Favorites',
-            href: '/student/favorites',
-            icon: Heart,
         },
         {
             name: 'Payments',
@@ -37,9 +32,8 @@ export const navItemsByRole = {
     tutor: [
         { name: 'Dashboard', href: '/tutor/dashboard', icon: LayoutGrid },
         { name: 'My Listings', href: '/tutor/post-tuition', icon: BookOpen },
-        { name: 'Applications', href: '/tutor/my-tuitions', icon: FileText },
+        { name: 'My Tuitions', href: '/tutor/my-tuitions', icon: BookBookmark },
         { name: 'Applications', href: '/tutor/applicants', icon: FileText },
-        // { name: 'Earnings', href: '/tutor/earnings', icon: CreditCard },
         { name: 'Profile Settings', href: '/tutor/settings', icon: UserCog },
     ],
     admin: [
