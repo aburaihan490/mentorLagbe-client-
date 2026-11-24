@@ -11,7 +11,7 @@ import { authClient } from '@/lib/auth-client';
 
 interface TutorStats {
     totalTuitions: number;
-    plan: 'free' | 'pro';
+    subscriptionPlan: 'free' | 'pro';
 }
 
 const PostTuitionManager = ({ url }: { url: string | undefined }) => {
@@ -19,25 +19,26 @@ const PostTuitionManager = ({ url }: { url: string | undefined }) => {
     const [stats, setStats] = useState<TutorStats | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    const isPro = stats?.plan === 'pro';
+    const isPro = stats?.subscriptionPlan === 'pro';
     const remaining = isPro
         ? null
         : Math.max(0, 2 - (stats?.totalTuitions ?? 0));
+    const isLimitReached = !isPro && remaining === 0;
 
     const handleSubmit = async (payload: TuitionFormPayload) => {
         setSubmitting(true);
 
-        if (!url) {
-            throw new Error('Backend API URL is not configured.');
-        }
         try {
+            if (!url) {
+                throw new Error('Backend API URL is not configured.');
+            }
             const { data, error } = await authClient.token();
             if (error || !data?.token) {
                 throw new Error(error?.message);
             }
 
             const jwtToken = data?.token;
-            const response = await fetch(`${url}/tuition/create-tuition`, {
+            const response = await fetch(`${url}/tutor/create-tuition`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -113,7 +114,7 @@ const PostTuitionManager = ({ url }: { url: string | undefined }) => {
             <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm">
                 <TuitionForm
                     submitLabel="Post Tuition"
-                    isSubmitting={submitting}
+                    isSubmitting={submitting || isLimitReached}
                     onSubmit={handleSubmit}
                 />
             </div>
