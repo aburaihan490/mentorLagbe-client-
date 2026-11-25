@@ -11,7 +11,7 @@ import { authClient } from '@/lib/auth-client';
 
 interface TutorStats {
     totalTuitions: number;
-    subscriptionPlan: 'free' | 'pro';
+    subscriptionPlan: 'free' | 'premium';
 }
 
 const PostTuitionManager = ({ url }: { url: string | undefined }) => {
@@ -19,7 +19,7 @@ const PostTuitionManager = ({ url }: { url: string | undefined }) => {
     const [stats, setStats] = useState<TutorStats | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    const isPro = stats?.subscriptionPlan === 'pro';
+    const isPro = stats?.subscriptionPlan === 'premium';
     const remaining = isPro
         ? null
         : Math.max(0, 2 - (stats?.totalTuitions ?? 0));

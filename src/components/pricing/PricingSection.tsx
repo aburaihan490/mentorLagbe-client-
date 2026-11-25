@@ -9,6 +9,7 @@ import {
     ArrowRight,
     ShieldCheck,
 } from 'lucide-react';
+import SubscribeAction from './SubscribeAction';
 
 const plans = [
     {
@@ -35,8 +36,8 @@ const plans = [
         name: 'Pro',
         description: 'Unlock premium features and grow faster.',
         icon: Crown,
-        studentPrice: 299,
-        tutorPrice: 499,
+        studentPrice: 10,
+        tutorPrice: 15,
         popular: true,
         features: [
             'Everything in Free plan',
@@ -170,22 +171,7 @@ export default function PricingSection() {
                             </div>
 
                             {/* CTA */}
-                            <Link
-                                href={
-                                    plan.popular ? '/subscription' : '/register'
-                                }
-                                className={`flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-bold transition ${
-                                    plan.popular
-                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700'
-                                        : 'border border-slate-200 bg-white text-slate-800 hover:border-emerald-500 hover:text-emerald-600'
-                                }`}
-                            >
-                                {plan.popular
-                                    ? 'Subscribe with Stripe'
-                                    : 'Get Started Free'}
-
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
+                            <SubscribeAction popular={plan.popular} />
                         </div>
                     ))}
                 </div>
@@ -232,7 +218,7 @@ function PriceBox({
             </div>
 
             <div className="text-2xl font-extrabold text-slate-900">
-                {price === 0 ? 'Free' : `৳${price}`}
+                {price === 0 ? 'Free' : `$${price}`}
             </div>
 
             {price > 0 && (
