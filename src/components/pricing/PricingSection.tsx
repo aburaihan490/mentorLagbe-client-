@@ -6,7 +6,6 @@ import {
     GraduationCap,
     Users,
     Sparkles,
-    ArrowRight,
     ShieldCheck,
 } from 'lucide-react';
 import SubscribeAction from './SubscribeAction';
