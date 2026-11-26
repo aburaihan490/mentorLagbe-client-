@@ -13,19 +13,15 @@ import {
 } from 'lucide-react';
 import type { ITuition } from '@/types/tuition';
 import { formatCurrency } from '@/lib/format';
-import {
-    EmptyState,
-    LoadingGrid,
-    PageHeader,
-    StatsCards,
-} from './StatsCards';
+import { EmptyState, LoadingGrid, PageHeader, StatsCards } from './StatsCards';
 import { StatusBadge } from './StatusBadge';
+import { authClient } from '@/lib/auth-client';
 
 interface TutorStats {
     totalTuitions: number;
     activeTuitions: number;
     totalApplicants: number;
-    plan: 'free' | 'pro';
+    subscriptionPlan: 'free' | 'premium';
 }
 
 const quickLinks = [
@@ -56,6 +52,10 @@ const TutorOverview = () => {
     const [stats, setStats] = useState<TutorStats | null>(null);
     const [tuitions, setTuitions] = useState<ITuition[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const { data: session } = authClient.useSession();
+    const subscriptionPlan = session?.user.subscriptionPlan;
+    console.log(stats);
 
     useEffect(() => {
         const load = async () => {
@@ -123,9 +123,12 @@ const TutorOverview = () => {
                         },
                         {
                             label: 'Current Plan',
-                            value: stats?.plan === 'pro' ? 'Pro' : 'Free',
+                            value:
+                                subscriptionPlan === 'premium'
+                                    ? 'premium'
+                                    : 'Free',
                             hint:
-                                stats?.plan === 'pro'
+                                subscriptionPlan === 'premium'
                                     ? 'Unlimited tuition posts'
                                     : 'Up to 2 tuition posts',
                             icon: Crown,
@@ -210,9 +213,9 @@ const TutorOverview = () => {
                                         {tuition.title}
                                     </p>
                                     <p className="mt-0.5 text-xs text-slate-500">
-                                        {tuition.subject} ·{' '}
-                                        {tuition.classLevel} ·{' '}
-                                        {formatCurrency(tuition.monthlyFee)}/mo
+                                        {tuition.subject} · {tuition.classLevel}{' '}
+                                        · {formatCurrency(tuition.monthlyFee)}
+                                        /mo
                                     </p>
                                 </div>
                                 <StatusBadge

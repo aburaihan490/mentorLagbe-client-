@@ -1,7 +1,22 @@
-import { CheckCircle2, ArrowRight, Home, Receipt } from 'lucide-react';
+'use client';
+import { authClient } from '@/lib/auth-client';
+import { CheckCircle2, Home, Receipt } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 const SuccessPage = () => {
+    const { refetch } = authClient.useSession();
+
+    useEffect(() => {
+        // সেশন এবং কুকি ক্যাশ জোরপূর্বক আপডেট করার জন্য
+        authClient
+            .getSession({
+                query: { disableCookieCache: true },
+            })
+            .then(() => {
+                refetch();
+            });
+    }, [refetch]);
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-100 px-4 py-10">
             <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center border border-green-100">

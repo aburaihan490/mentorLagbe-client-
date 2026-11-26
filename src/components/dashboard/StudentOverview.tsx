@@ -14,6 +14,8 @@ import { StatusBadge } from './StatusBadge';
 const StudentOverview = () => {
     const [applications, setApplications] = useState<IApplication[]>([]);
     const [loading, setLoading] = useState(true);
+    const { data: session } = authClient.useSession();
+    console.log(session?.user);
 
     const load = useCallback(async () => {
         try {
@@ -83,7 +85,7 @@ const StudentOverview = () => {
         },
         {
             label: 'Current Plan',
-            value: 'Free',
+            value: `${session?.user?.subscriptionPlan}`,
             icon: Crown,
             tone: 'violet' as const,
         },

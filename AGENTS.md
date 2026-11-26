@@ -8,33 +8,42 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## This file is partially managed
+## Managed file
 
-- The block above is rewritten by `next dev` (see `node_modules/next/dist/server/lib/generate-agent-files.js`). With `experimental.agentFeedback: true` in `next.config.ts`, `next dev` also appends a `<!-- BEGIN:nextjs-agent-feedback -->` block here — commit both instead of deleting them.
+- `next dev` rewrites the block above. With `experimental.agentFeedback: true` in `next.config.ts`, it also appends a `<!-- BEGIN:nextjs-agent-feedback -->` block. Don't delete either — commit them with your work or dev restores the diff.
 
-## Repo layout
+## Shape of the repo
 
-- Client-only Next.js 16.4.6 App Router + Turbopack, React 19, strict TS. Alias `@/*` → `src/*`. `README.md` is untouched create-next-app boilerplate.
-- `../server` is a separate git repo (Express 5, MongoDB, Stripe) serving `/api/v1` on port 4000; no workspace tooling links the repos.
-- Auth is the exception to "client-only": Next talks to MongoDB directly through Better Auth (`src/lib/auth.ts`, db `mentorlagbe`). The Express `/auth` router is a stub, not the auth backend.
+- Next 16.4.6 App Router + Turbopack, React 19, strict TS, alias `@/*` → `src/*`. `README.md` is untouched create-next-app boilerplate. No test suite, Prettier, editorconfig, or CI.
+- `../server` is a separate git repo (Express 5 + MongoDB + Stripe) serving `/api/v1` on port 4000; no workspace tooling links them — run both by hand.
+- The Next app also talks to the same Mongo DB (`mentorlagbe`) directly. The Express `/auth` router is a stub, not the auth backend.
 
 ## Commands
 
-- `npm run dev`; `npm run lint` (whole repo; single file: `npx eslint src/path/file.tsx`); `npx tsc --noEmit` (no npm script).
-- `npm run build` runs TS and **prerenders `/` by calling the Express API** — start `../server` on port 4000 first, or it fails with `prerender-error` on `/`.
-- No test suite, Prettier, editorconfig, or CI. Verify with `npm run lint` → `npx tsc --noEmit` → `npm run build`.
+- `npm run dev`; `npm run lint` (whole repo; single file: `npx eslint src/path/file.tsx`); `npx tsc --noEmit` (no npm script). Server: `cd ../server && npm run dev` (nodemon).
+- `npm run build` typechecks and prerenders `/` (`FeaturedTuitions` → `getTuitions()` → Express). Start `../server` on 4000 first or the build fails with `prerender-error` on `/`.
+- Verify in order: `npm run lint` → `npx tsc --noEmit` → `npm run build`.
 
-## Environment
+## Environment (both `.env` files are gitignored)
 
-- `.env` (gitignored) needs `BACKEND_BASE_URL` (e.g. `http://localhost:4000/api/v1`), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `MONGODB_URL`, and `NEXT_PUBLIC_IMAGEDB_URL` (ImgBB key; note the `IMAGEDB` spelling).
-- `../server` needs its own `.env` (`PORT`, `MONGODB_URL`, `CLIENT_URL`) and must listen on 4000; data pages fail without it.
+- Client: `BACKEND_BASE_URL` (server-side Express base, e.g. `http://localhost:4000/api/v1`), `NEXT_PUBLIC_BACKEND_BASE_URL` (same base for browser fetches), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `MONGODB_URL`, `NEXT_PUBLIC_IMAGEDB_URL` (ImgBB key — note the `IMAGEDB` spelling).
+- Server: `PORT`, `MONGODB_URL`, `CLIENT_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. `config/env.js` throws at startup if any is missing, so the server won't boot without Stripe keys.
+- Stripe webhook is `POST /api/webhooks/stripe` on the server — outside `/api/v1`, registered with `express.raw` before `express.json` in `app.js`. Local testing: `stripe listen --forward-to http://localhost:4000/api/webhooks/stripe`.
 
-## Data flow
+## Data flow (three paths — follow the surrounding code)
 
-- Server components fetch via `src/qurey/` — misspelled on purpose, don't rename. Files are `server-only` and call `${BACKEND_BASE_URL}/tuition/...`.
-- `getTuitions` response includes `{ data, pagination }`. Filters/pagination live in URL searchParams: `TuitionFilter` (client) resets `page` on change; `TuitionList` (async server component) refetches and renders `Pagination`.
-- Auth: Better Auth is mounted at `src/app/api/auth/[...all]/route.ts`; client code uses `authClient` (`src/lib/auth-client.ts`); never add a runtime import of `src/lib/auth.ts` to a client component (module-scope `MongoClient`). Sign-up uploads a required <2MB image to ImgBB, then calls `signUp.email` with `role` (`Student`/`Tutor`). Sign-in and Navbar are wired to `authClient` (`signIn.email`, `useSession`, `signOut`; toasts via `react-hot-toast`, `Toaster` in the root layout), but the tuition `[id]` page still passes `userRole={'Student'}` hardcoded to `TuitionDetails` — apply-gating ignores the real session.
-- `ApplyTuitionModal` POSTs to `/api/applications`, which exists in neither repo — expect a 404.
+- Public tuitions: server-only `src/qurey/` (misspelled on purpose; don't rename) calls `${BACKEND_BASE_URL}/tuition/...`. `getTuitions` returns `{ data, pagination }`; filters/pagination live in URL searchParams (`TuitionFilter` resets `page`, `TuitionList` refetches, renders `Pagination`).
+- Older dashboard managers fetch `${NEXT_PUBLIC_BACKEND_BASE_URL}/...` from the browser with a Better Auth JWT from `authClient.token()` sent as `Authorization: Bearer ...` (see `MyApplicationsManager`, `TutorTuitionsManager`, `ApplicantsManager`, payments pages). Newer ones fetch client-local `/api/dashboard/*` routes that use `getApiUser()` + `getDb()` to query Mongo directly, with no Express hop (see `AdminOverview`, `TutorOverview`).
+- Checkout: `checkOutAction` (`src/action/subscription.ts`) POSTs to `${BACKEND_BASE_URL}/checkout/create-checkout-session` with a Better Auth JWT; Express creates the Stripe session, inserts a `subscriptions` row, then redirects to `/checkout/success` or `/checkout/cancel`. The webhook updates `user.subscriptionPlan`.
+- `/api/applications` exists client-side (public POST writing to Mongo `applications`) but is currently unused: the apply modal POSTs to Express `/applications/student-application` with a JWT instead.
+
+## Auth, roles, and plan
+
+- Better Auth is mounted at `src/app/api/auth/[...all]/route.ts`; client code uses `authClient`. `src/lib/auth.ts` creates a module-scope `MongoClient` (server-only) — never add a runtime import of it to a client component; `auth-client.ts` references it only via `typeof auth` for `inferAdditionalFields`.
+- Sign-up uploads a required <2MB image to ImgBB, then calls `signUp.email` with `role` (`Student`/`Tutor`). Roles are stored capitalized; normalize with `.toLowerCase()`.
+- Route guards live in `src/proxy.ts` (Next 16's replacement for `middleware.ts`; there is no middleware file), matcher `/dashboard`, `/student/:path*`, `/tutor/:path*`, `/admin/:path*`. Actual pages are under `/student|/tutor|/admin/*` in the `(dashboard)` group.
+- Plan value mismatch: the webhook and dashboard UI use `'premium'`, but `normalizePlan()` in `src/lib/api-auth.ts` only accepts `'pro'` — client-local API routes therefore treat premium users as `free` (2-tuition cap in `POST /api/dashboard/tuitions`). Check both values when touching plan gating.
+- Sessions use a 5-hour JWT cookie cache; `/checkout/success` forces a refresh with `getSession({ query: { disableCookieCache: true } })` + `refetch()` so a changed plan becomes visible. Copy that pattern when fresh session data matters.
 
 ## Next 16 gotchas
 

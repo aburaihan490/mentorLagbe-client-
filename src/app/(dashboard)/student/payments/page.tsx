@@ -1,96 +1,214 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+'use client';
+
+import { authClient } from '@/lib/auth-client';
+import { useEffect, useState } from 'react';
+
+interface Payment {
+    _id: string;
+    userId: string;
+    userEmail: string;
+    role: string;
+    stripeCustomerId: string;
+    stripeCheckoutSessionId: string;
+    stripeSubscriptionId: string;
+    subscriptionPlan: string;
+    amount: number;
+    currency: string;
+    status: string;
+    paymentStatus: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface PaymentSummary {
+    totalPaid: number;
+    pendingPayments: number;
+    thisMonth: number;
+}
+
+interface PaymentResponse {
+    success: boolean;
+    summary: PaymentSummary;
+    payments: Payment[];
+    message?: string;
+}
 
 const PaymentsPage = () => {
+    const [payments, setPayments] = useState<Payment[]>([]);
+
+    const [summary, setSummary] = useState<PaymentSummary>({
+        totalPaid: 0,
+        pendingPayments: 0,
+        thisMonth: 0,
+    });
+
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string>('');
+
+    const API_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+
+    useEffect(() => {
+        const fetchPayments = async (): Promise<void> => {
+            try {
+                if (!API_URL) {
+                    throw new Error('API URL is not configured');
+                }
+
+                const { data, error } = await authClient.token();
+
+                if (error || !data?.token) {
+                    throw new Error(error?.message || 'Authentication failed');
+                }
+
+                const response = await fetch(
+                    `${API_URL}/checkout/get-student-payments`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${data.token}`,
+                        },
+                    },
+                );
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const result: PaymentResponse = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+
+                setPayments(result.payments);
+                setSummary(result.summary);
+            } catch (error: unknown) {
+                console.error('Payment fetch error:', error);
+
+                setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Something went wrong',
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPayments();
+    }, []);
+
+    const formatAmount = (amount: number, currency: string): string => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency.toUpperCase(),
+        }).format(amount / 100);
+    };
+
+    if (loading) {
+        return <div className="p-6">Loading payments...</div>;
+    }
+
+    if (error) {
+        return <div className="p-6 text-red-500">{error}</div>;
+    }
+
     return (
         <div className="space-y-6">
-            {/* Payment Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-xl p-6 shadow-sm">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <svg className="h-6 w-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L2 7l10 5 5-10L12 2zM2 17l5 10 10-5L12 17l-5-10-5 10z" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-slate-500 text-sm">Total Paid</p>
-                            <p className="text-2xl font-bold text-slate-900">৳ 45,000</p>
-                        </div>
-                    </div>
+                    <p className="text-slate-500 text-sm">Total Paid</p>
+
+                    <p className="text-2xl font-bold">
+                        {formatAmount(summary.totalPaid, 'usd')}
+                    </p>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <svg className="h-6 w-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L2 7l10 5 5-10L12 2zM2 17l5 10 10-5L12 17l-5-10-5 10z" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-slate-500 text-sm">Pending Payments</p>
-                            <p className="text-2xl font-bold text-emerald-600">৳ 8,500</p>
-                        </div>
-                    </div>
+                    <p className="text-slate-500 text-sm">Pending Payments</p>
+
+                    <p className="text-2xl font-bold text-emerald-600">
+                        {formatAmount(summary.pendingPayments, 'usd')}
+                    </p>
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <svg className="h-6 w-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L2 7l10 5 5-10L12 2zM2 17l5 10 10-5L12 17l-5-10-5 10z" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-slate-500 text-sm">This Month</p>
-                            <p className="text-2xl font-bold text-slate-900">৳ 5,000</p>
-                        </div>
-                    </div>
+                    <p className="text-slate-500 text-sm">This Month</p>
+
+                    <p className="text-2xl font-bold">
+                        {formatAmount(summary.thisMonth, 'usd')}
+                    </p>
                 </div>
             </div>
 
-            {/* Payment History Table */}
+            {/* Payment History */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-900 mb-4">Payment History</h2>
+                <h2 className="text-xl font-semibold mb-4">Payment History</h2>
+
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-slate-200">
-                                <th className="p-3 text-left text-sm font-medium text-slate-500">Transaction ID</th>
-                                <th className="p-3 text-left text-sm font-medium text-slate-500">Tuition</th>
-                                <th className="p-3 text-left text-sm font-medium text-slate-500">Amount</th>
-                                <th className="p-3 text-left text-sm font-medium text-slate-500">Date</th>
-                                <th className="p-3 text-left text-sm font-medium text-slate-500">Status</th>
+                            <tr className="border-b text-left">
+                                <th className="p-3">Transaction ID</th>
+                                <th className="p-3">Plan</th>
+                                <th className="p-3">Amount</th>
+                                <th className="p-3">Date</th>
+                                <th className="p-3">Status</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            <tr className="border-b border-slate-200">
-                                <td className="p-3">TXN-20240115-001</td>
-                                <td className="p-3 font-medium text-slate-900">Introduction to Python</td>
-                                <td className="p-3 text-emerald-600">৳ 5,000</td>
-                                <td className="p-3 text-slate-500">2024-01-15</td>
-                                <td className="p-3">
-                                    <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded">Completed</span>
-                                </td>
-                            </tr>
-                            <tr className="border-b border-slate-200">
-                                <td className="p-3">TXN-20240110-003</td>
-                                <td className="p-3 font-medium text-slate-900">Advanced Mathematics</td>
-                                <td className="p-3 text-emerald-600">৳ 8,000</td>
-                                <td className="p-3 text-slate-500">2024-01-10</td>
-                                <td className="p-3">
-                                    <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded">Completed</span>
-                                </td>
-                            </tr>
-                            <tr className="border-b border-slate-200">
-                                <td className="p-3">TXN-20240105-007</td>
-                                <td className="p-3 font-medium text-slate-900">English Speaking Course</td>
-                                <td className="p-3 text-emerald-600">৳ 3,500</td>
-                                <td className="p-3 text-slate-500">2024-01-05</td>
-                                <td className="p-3">
-                                    <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded">Pending</span>
-                                </td>
-                            </tr>
+                            {payments.length > 0 ? (
+                                payments.map((payment) => (
+                                    <tr key={payment._id} className="border-b">
+                                        <td className="p-3 text-sm">
+                                            {payment.stripeCheckoutSessionId}
+                                        </td>
+
+                                        <td className="p-3 font-medium">
+                                            {payment.subscriptionPlan}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {formatAmount(
+                                                payment.amount,
+                                                payment.currency,
+                                            )}
+                                        </td>
+
+                                        <td className="p-3 text-sm">
+                                            {new Date(
+                                                payment.createdAt,
+                                            ).toLocaleDateString()}
+                                        </td>
+
+                                        <td className="p-3">
+                                            <span
+                                                className={`text-xs px-2 py-1 rounded ${
+                                                    payment.paymentStatus ===
+                                                    'paid'
+                                                        ? 'bg-emerald-100 text-emerald-700'
+                                                        : payment.paymentStatus ===
+                                                            'pending'
+                                                          ? 'bg-yellow-100 text-yellow-700'
+                                                          : 'bg-red-100 text-red-700'
+                                                }`}
+                                            >
+                                                {payment.paymentStatus}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="text-center p-6 text-slate-500"
+                                    >
+                                        No payment history found.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

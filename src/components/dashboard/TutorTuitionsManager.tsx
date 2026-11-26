@@ -45,8 +45,8 @@ const TutorTuitionsManager = ({
             }
 
             const jwtToken = data?.token;
-            console.log(jwtToken);
-            console.log(server_url);
+
+        
             const result = await apiFetch<ITuition[]>(
                 `${server_url}/tutor/tutor-all-tutions`,
                 {
